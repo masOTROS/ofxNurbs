@@ -1,3 +1,7 @@
+// Based on implementations for cinder:
+// https://gist.github.com/num3ric/1324138
+// http://itr0510.blogspot.com.ar/2011/03/cindernurbs.html
+
 #include "testApp.h"
 
 #define U_POINTS 4
@@ -21,7 +25,7 @@ void testApp::setup(){
 	image.loadImage("test.png");
 
 	// this sets the camera's distance from the object
-	cam.setDistance(1000);
+	cam.setDistance(250);
 
 	//Init lights
 	/*GLfloat ambient[] = {0.2, 0.2, 0.2, 1.0};
@@ -29,6 +33,10 @@ void testApp::setup(){
 	GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
 	GLfloat mat_shininess[] = {50.0};
 	GLfloat mat_color[] = {1.0, 1.0, 1.0};
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_AUTO_NORMAL);
+	glEnable(GL_NORMALIZE);
 	
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -39,10 +47,6 @@ void testApp::setup(){
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 	glMaterialfv( GL_FRONT, GL_DIFFUSE,	mat_color);*/
-
-	//glEnable(GL_DEPTH_TEST);
-	glEnable(GL_AUTO_NORMAL);
-	glEnable(GL_NORMALIZE);
 	
 	theNurb = gluNewNurbsRenderer();
 	gluNurbsProperty(theNurb, GLU_SAMPLING_TOLERANCE, 25.0);
@@ -50,13 +54,13 @@ void testApp::setup(){
 	//gluNurbsCallback(theNurb, GLU_ERROR, (GLvoid (*)()) nurbsError);
 	for (int u = 0; u < U_POINTS; u++) {
 		for (int v = 0; v < V_POINTS; v++) {
-			ctlpoints[u][v][0] = 2.0*((GLfloat)u - 1.5);
-			ctlpoints[u][v][1] = 2.0*((GLfloat)v - 1.5);
+			ctlpoints[u][v][0] = ofMap(u,0,U_POINTS-1,-1.0f,1.0f);
+			ctlpoints[u][v][1] = ofMap(v,0,V_POINTS-1,-1.0f,1.0f);
 			
 			if ( (u == 1 || u == 2) && (v == 1 || v == 2))
-				ctlpoints[u][v][2] = 6.0;
+				ctlpoints[u][v][2] = 1.0f;
 			else
-				ctlpoints[u][v][2] = 0.0;
+				ctlpoints[u][v][2] = 0.0f;
 		}
 	}
 }
@@ -66,7 +70,7 @@ void testApp::update(){
 	for (int u = 0; u < U_POINTS; u++) {
 		for (int v = 0; v < V_POINTS; v++) {
 			if ( (u == 1 || u == 2) && (v == 1 || v == 2))
-				ctlpoints[u][v][2] = 6.0*cos(ofGetElapsedTimef()/5);
+				ctlpoints[u][v][2] = 1.0f*cos(ofGetElapsedTimef()/5);
 		}
 	}
 }
