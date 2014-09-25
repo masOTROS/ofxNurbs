@@ -8,12 +8,18 @@ class testApp : public ofBaseApp{
 		void update();
 		void draw();
 		void keyPressed(int key);
+		void mouseDragged(int x, int y, int button);
 
 		void drawCtlPoints();
 
 		ofEasyCam cam;
 
-		ofImage image;
+		ofPixels image;
 		
 		GLUnurbsObj *theNurb;
+
+		GLuint textures[1];
+
+		bool editMode;
+		int editSelection;
 };
