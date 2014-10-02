@@ -16,7 +16,7 @@ class testApp : public ofBaseApp{
 
 		ofPixels image;
 		
-		GLUnurbsObj *theNurb;
+		GLenum drawMode;
 
 		GLuint textures[1];
 
