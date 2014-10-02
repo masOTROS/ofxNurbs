@@ -26,6 +26,11 @@ GLfloat knotsV[]={0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0};
 //GLfloat knotsU[]={0.0, 0.0, 0.0, 0.0, 0.0, 0.33, 0.66, 1.0, 1.0, 1.0, 1.0, 1.0};
 //GLfloat knotsV[]={0.0, 0.0, 0.0, 0.0, 0.0, 0.33, 0.66, 1.0, 1.0, 1.0, 1.0, 1.0};
 
+/*Note that a gluNurbsSurface with sKnotCount knots in the u direction and
+tKnotCount knots in the v direction with orders sOrder and tOrder must
+have (sKnotCount - sOrder) x (tKnotCount - tOrder) control points.*/
+//http://www.glprogramming.com/red/chapter12.html
+
 GLvoid nurbsError(GLenum errorCode){
 	const GLubyte *estring;
 	
@@ -56,7 +61,7 @@ void testApp::setup(){
 	cam.setDistance(250);
 
 	//Init lights
-	/*GLfloat ambient[] = {0.2, 0.2, 0.2, 1.0};
+	GLfloat ambient[] = {0.2, 0.2, 0.2, 1.0};
 	GLfloat position[] = {0.0, 0.0, 2.0, 1.0};
 	GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
 	GLfloat mat_shininess[] = {50.0};
@@ -74,7 +79,7 @@ void testApp::setup(){
 	
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-	glMaterialfv( GL_FRONT, GL_DIFFUSE,	mat_color);*/
+	glMaterialfv( GL_FRONT, GL_DIFFUSE,	mat_color);
 	
 	theNurb = gluNewNurbsRenderer();
 	gluNurbsProperty(theNurb, GLU_SAMPLING_TOLERANCE, 25.0);
@@ -102,10 +107,12 @@ void testApp::setup(){
 
 //--------------------------------------------------------------
 void testApp::update(){
-	for (int u = 0; u < U_POINTS; u++) {
-		for (int v = 0; v < V_POINTS; v++) {
-			if ( (u == (U_POINTS/2-1) || u == U_POINTS/2) && (v == (V_POINTS/2-1) || v == V_POINTS/2))
-				ctlpoints[u][v][2] = sin(ofGetElapsedTimef()/5);
+	if(!editMode){
+		for (int u = 0; u < U_POINTS; u++) {
+			for (int v = 0; v < V_POINTS; v++) {
+				if ( (u == (U_POINTS/2-1) || u == U_POINTS/2) && (v == (V_POINTS/2-1) || v == V_POINTS/2))
+					ctlpoints[u][v][2] = sin(ofGetElapsedTimef()/5);
+			}
 		}
 	}
 }
@@ -117,16 +124,19 @@ void testApp::draw(){
 	cam.begin();
 
 	ofPushMatrix();
-	ofScale(SURFACE_WIDTH,SURFACE_HEIGHT,(editMode?0:SURFACE_DEPTH));
+	ofScale(SURFACE_WIDTH,SURFACE_HEIGHT,SURFACE_DEPTH);
 	ofTranslate(-0.5,-0.5);
 	glColor3f(1.0, 1.0, 1.0);
-	glEnable(GL_TEXTURE_2D); 
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_AUTO_NORMAL);
         glBindTexture(GL_TEXTURE_2D, textures[0]);  
-        //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 		gluBeginSurface(theNurb);
 		gluNurbsSurface(theNurb, U_KNOTS, knotsU, V_KNOTS, knotsV, V_POINTS * 3, 3, &ctlpoints[0][0][0], U_POINTS, V_POINTS, GL_MAP2_TEXTURE_COORD_2);
+		//gluNurbsSurface(theNurb, U_KNOTS, knotsU, V_KNOTS, knotsV, V_POINTS * 3, 3, &ctlpoints[0][0][0], U_POINTS, V_POINTS, GL_MAP2_NORMAL);
+		//gluNurbsSurface(theNurb, U_KNOTS, knotsU, V_KNOTS, knotsV, V_POINTS * 3, 3, &ctlpoints[0][0][0], U_POINTS, V_POINTS, GL_MAP2_INDEX);
 		gluNurbsSurface(theNurb, U_KNOTS, knotsU, V_KNOTS, knotsV, V_POINTS * 3, 3, &ctlpoints[0][0][0], U_POINTS, V_POINTS, GL_MAP2_VERTEX_3);
-		gluNurbsSurface(theNurb, U_KNOTS, knotsU, V_KNOTS, knotsV, V_POINTS * 3, 3, &ctlpoints[0][0][0], U_POINTS, V_POINTS, GL_MAP2_NORMAL);
 		gluEndSurface(theNurb);
 		glFlush();  
     glDisable(GL_TEXTURE_2D);
@@ -209,11 +219,13 @@ void testApp::keyPressed(int key){
 		editMode=!editMode;
 		if(editMode){
 			cam.disableMouseInput();
-			cam.reset();
 		}
 		else{
 			cam.enableMouseInput();
 		}
+	}
+	else if(key=='r'){
+		cam.reset();
 	}
 	else if(key==OF_KEY_RIGHT){
 		editSelection=((editSelection+1)%(U_POINTS*V_POINTS));
@@ -229,6 +241,6 @@ void testApp::mouseDragged(int x, int y, int button){
 		int selU=editSelection%U_POINTS;
 		int selV=editSelection/U_POINTS;
 		ctlpoints[selU][selV][0]=(float)x/ofGetWidth();
-		ctlpoints[selU][selV][1]=(float)y/ofGetHeight();
+		ctlpoints[selU][selV][1]=1.0f-(float)y/ofGetHeight();
 	}
 }
